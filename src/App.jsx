@@ -51,14 +51,139 @@ function App() {
   const [curr, setCurr] = useState(null)
   const [index, setIndex] = useState(null)
   const [isFromDropZone, setIsFromDropZone] = useState(false)
+  const [touchStartPos, setTouchStartPos] = useState(null)
+  const [dragElement, setDragElement] = useState(null)
+  const [ghostImage, setGhostImage] = useState(null)
+  const getElementFromTouch = useCallback((clientX, clientY) => {
+    return document.elementFromPoint(clientX, clientY)
+  }, [])
+
+  const getGridPosition = useCallback((element) => {
+    const gridCell = element.closest('.grid-cell')
+    if (!gridCell) return null
+    
+    const cellIndex = Array.from(gridCell.parentElement.children).indexOf(gridCell)
+    const row = Math.floor(cellIndex / game.size[1])
+    const col = cellIndex % game.size[1]
+    
+    return { row, col }
+  }, [game.size])
+
+  const getStagingIndex = useCallback((element) => {
+    const stagingItem = element.closest('.pieces-staging-item')
+    if (!stagingItem) return null
+    
+    return Array.from(stagingItem.parentElement.children).indexOf(stagingItem)
+  }, [])
+
+  const handleTouchStart = useCallback((e, touchIndex, touchIsFromDropZone = false) => {
+    e.preventDefault()
+    const touch = e.touches[0]
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY })
+    setIndex(touchIndex)
+    setIsFromDropZone(touchIsFromDropZone)
+    setIsDragging(true)
+    setDragElement(e.currentTarget)
+    
+    const pieceName = touchIsFromDropZone 
+      ? (() => {
+          const row = Math.floor(touchIndex / game.size[1])
+          const col = touchIndex % game.size[1]
+          return grid[row] && grid[row][col] ? grid[row][col].piece : null
+        })()
+      : game.pieces[touchIndex]
+    
+    if (pieceName) {
+      setGhostImage({
+        piece: pieceName,
+        x: touch.clientX,
+        y: touch.clientY
+      })
+    }
+  }, [game.pieces, game.size, grid])
 
   const handleTouchMove = useCallback((e) => {
-
-  }, [])
+    if (!isDragging || !touchStartPos) return
+    
+    e.preventDefault()
+    const touch = e.touches[0]
+    
+    if (ghostImage) {
+      setGhostImage(prev => ({
+        ...prev,
+        x: touch.clientX,
+        y: touch.clientY
+      }))
+    }
+    
+    const element = getElementFromTouch(touch.clientX, touch.clientY)
+    
+    if (element) {
+      const gridPos = getGridPosition(element)
+      if (gridPos && grid[gridPos.row] && grid[gridPos.row][gridPos.col] && grid[gridPos.row][gridPos.col].isPresent) {
+        const dragIndex = index
+        if (!isFromDropZone) {
+          setCurr({ piece: game.pieces[dragIndex], row: gridPos.row, col: gridPos.col })
+        } else {
+          let row1 = Math.floor(dragIndex / game.size[1]);
+          let col1 = dragIndex % game.size[1];
+          setCurr({ piece: grid[row1][col1].piece, row: gridPos.row, col: gridPos.col })
+        }
+      } else {
+        setCurr(null)
+      }
+    }
+  }, [isDragging, touchStartPos, index, isFromDropZone, game.pieces, game.size, grid, getElementFromTouch, getGridPosition, ghostImage])
 
   const handleTouchEnd = useCallback((e) => {
+    if (!isDragging) return
+    
+    e.preventDefault()
+    const touch = e.changedTouches[0]
+    const element = getElementFromTouch(touch.clientX, touch.clientY)
+    
+    setCurr(null)
+    
+    if (element) {
+      const gridPos = getGridPosition(element)
+      if (gridPos && grid[gridPos.row] && grid[gridPos.row][gridPos.col] && grid[gridPos.row][gridPos.col].isPresent) {
+        const dragIndex = index
+        
+        if (!isFromDropZone) {
+          if (dragIndex == null || dragIndex >= game.pieces.length) return;
+
+          const pieceToAdd = game.pieces[dragIndex];
+          if (!pieceToAdd) return;
+
+          const newGrid = JSON.parse(JSON.stringify(grid));
+          const pieceToReplace = newGrid[gridPos.row][gridPos.col].piece;
+          newGrid[gridPos.row][gridPos.col].piece = pieceToAdd;
+          setGrid(newGrid);
+
+          const updatedPieces = [...game.pieces];
+          updatedPieces.splice(dragIndex, 1);
+          if (pieceToReplace) updatedPieces.push(pieceToReplace);
+          setgame(prev => ({ ...prev, pieces: updatedPieces }));
+        } else {
+          let row1 = Math.floor(dragIndex / game.size[1]);
+          let col1 = dragIndex % game.size[1];
+          const newGrid = JSON.parse(JSON.stringify(grid));
+          let tempPiece = null
+          if (newGrid[gridPos.row][gridPos.col].piece) {
+            tempPiece = newGrid[gridPos.row][gridPos.col].piece
+          }
+          newGrid[gridPos.row][gridPos.col].piece = newGrid[row1][col1].piece;
+          newGrid[row1][col1].piece = tempPiece
+          setGrid(newGrid);
+        }
+      }
+    }
+    
     setIsDragging(false)
-  }, [])
+    setTouchStartPos(null)
+    setDragElement(null)
+    setGhostImage(null)
+  }, [isDragging, index, isFromDropZone, grid, game, getElementFromTouch, getGridPosition])
 
   const handleDragStart = useCallback((e, index, isFromDropZone = false) => {
     setIndex(index)
@@ -134,6 +259,7 @@ function App() {
         handleTouchEnd(e);
       }
     };
+    
     document.addEventListener('touchmove', handleDocumentTouchMove, { passive: false });
     document.addEventListener('touchend', handleDocumentTouchEnd, { passive: false });
 
@@ -221,6 +347,7 @@ function App() {
                       }}
                       draggable={!!item.piece}
                       onDragStart={(e) => item.piece && handleDragStart(e, inx * game.size[1] + ind, true)}
+                      onTouchStart={(e) => item.piece && handleTouchStart(e, inx * game.size[1] + ind, true)}
                       style={{ backgroundColor: `${item.backgroundColor}` }}
                     >
                       {item.piece && <img className='grid-img' src={`/${item.piece}.png`} alt={`${item.piece}-img`} />}
@@ -238,12 +365,39 @@ function App() {
                 className='pieces-staging-item'
                 draggable
                 onDragStart={(e) => handleDragStart(e, inx, false)}
+                onTouchStart={(e) => handleTouchStart(e, inx, false)}
               >
                 <img src={`/${piece}.png`} alt={`${piece}-img`} />
               </div>
             )
           })}
         </div>
+       
+        {ghostImage && (
+          <div
+            style={{
+              position: 'fixed',
+              left: ghostImage.x - 25,
+              top: ghostImage.y - 25,
+              width: '50px',
+              height: '50px',
+              pointerEvents: 'none',
+              zIndex: 1000,
+              opacity: 0.7,
+              transform: 'scale(1.1)'
+            }}
+          >
+            <img 
+              src={`/${ghostImage.piece}.png`} 
+              alt={`${ghostImage.piece}-ghost`}
+              style={{
+                width: '100%',
+                height: '100%',
+                filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))'
+              }}
+            />
+          </div>
+        )}
       </main>
     </>
   )
