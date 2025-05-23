@@ -36,7 +36,7 @@ const pieces = {
 const CheckSolution = (grid, rows, cols) => {
 
     if (!grid || grid.length != rows || grid[0].length != cols) {
-        return true
+        return [true, [-1. - 1]]
     }
     for (let i = 0; i < rows; i += 1) {
         for (let j = 0; j < cols; j += 1) {
@@ -53,7 +53,7 @@ const CheckSolution = (grid, rows, cols) => {
                         n2 += move[1];
                         if (n1 < 0 || n1 >= rows || n2 < 0 || n2 >= cols) break;
                         if (grid[n1][n2].piece) {
-                            return false;
+                            return [false, [n1, n2]];
                         }
                         if (num === 1) break;
                     }
@@ -61,7 +61,7 @@ const CheckSolution = (grid, rows, cols) => {
             }
         }
     }
-    return true;
+    return [true, [-1, -1]];
 };
 
 

@@ -43,8 +43,10 @@ function App() {
   let [grid, setGrid] = useState([])
   let [game, setgame] = useState({
     size: [3, 4],
-    pieces: ["king","king","knights","knights","rooks"]
+    pieces: ["bishops", "bishops", "bishops", "bishops", "queen"],
+    notHave: [[0, 0]]
   })
+  const [steps, setSteps] = useState(0)
   const [loss, setLoss] = useState(false)
   const [win, setWin] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -61,18 +63,18 @@ function App() {
   const getGridPosition = useCallback((element) => {
     const gridCell = element.closest('.grid-cell')
     if (!gridCell) return null
-    
+
     const cellIndex = Array.from(gridCell.parentElement.children).indexOf(gridCell)
     const row = Math.floor(cellIndex / game.size[1])
     const col = cellIndex % game.size[1]
-    
+
     return { row, col }
   }, [game.size])
 
   const getStagingIndex = useCallback((element) => {
     const stagingItem = element.closest('.pieces-staging-item')
     if (!stagingItem) return null
-    
+
     return Array.from(stagingItem.parentElement.children).indexOf(stagingItem)
   }, [])
 
@@ -84,15 +86,15 @@ function App() {
     setIsFromDropZone(touchIsFromDropZone)
     setIsDragging(true)
     setDragElement(e.currentTarget)
-    
-    const pieceName = touchIsFromDropZone 
+
+    const pieceName = touchIsFromDropZone
       ? (() => {
-          const row = Math.floor(touchIndex / game.size[1])
-          const col = touchIndex % game.size[1]
-          return grid[row] && grid[row][col] ? grid[row][col].piece : null
-        })()
+        const row = Math.floor(touchIndex / game.size[1])
+        const col = touchIndex % game.size[1]
+        return grid[row] && grid[row][col] ? grid[row][col].piece : null
+      })()
       : game.pieces[touchIndex]
-    
+
     if (pieceName) {
       setGhostImage({
         piece: pieceName,
@@ -104,10 +106,10 @@ function App() {
 
   const handleTouchMove = useCallback((e) => {
     if (!isDragging || !touchStartPos) return
-    
+
     e.preventDefault()
     const touch = e.touches[0]
-    
+
     if (ghostImage) {
       setGhostImage(prev => ({
         ...prev,
@@ -115,9 +117,9 @@ function App() {
         y: touch.clientY
       }))
     }
-    
+
     const element = getElementFromTouch(touch.clientX, touch.clientY)
-    
+
     if (element) {
       const gridPos = getGridPosition(element)
       if (gridPos && grid[gridPos.row] && grid[gridPos.row][gridPos.col] && grid[gridPos.row][gridPos.col].isPresent) {
@@ -136,19 +138,20 @@ function App() {
   }, [isDragging, touchStartPos, index, isFromDropZone, game.pieces, game.size, grid, getElementFromTouch, getGridPosition, ghostImage])
 
   const handleTouchEnd = useCallback((e) => {
+    setSteps(prev => prev += 1)
     if (!isDragging) return
-    
+
     e.preventDefault()
     const touch = e.changedTouches[0]
     const element = getElementFromTouch(touch.clientX, touch.clientY)
-    
+
     setCurr(null)
-    
+
     if (element) {
       const gridPos = getGridPosition(element)
       if (gridPos && grid[gridPos.row] && grid[gridPos.row][gridPos.col] && grid[gridPos.row][gridPos.col].isPresent) {
         const dragIndex = index
-        
+
         if (!isFromDropZone) {
           if (dragIndex == null || dragIndex >= game.pieces.length) return;
 
@@ -178,7 +181,7 @@ function App() {
         }
       }
     }
-    
+
     setIsDragging(false)
     setTouchStartPos(null)
     setDragElement(null)
@@ -195,6 +198,7 @@ function App() {
     e.preventDefault();
     e.stopPropagation();
     setCurr(null)
+    setSteps(prev => prev + 1)
     const dragIndex = index
     if (!isFromDropZone) {
       const dragIndex = index;
@@ -234,9 +238,15 @@ function App() {
     for (let i = 0; i < game.size[0]; i += 1) {
       let row = []
       for (let j = 0; j < game.size[1]; j += 1) {
+        let isPresent = true
+        for (let item of game.notHave) {
+          if (item[0] == i && item[1] == j) {
+            isPresent = false
+          }
+        }
         row.push({
           num: i * game.size[1] + j,
-          isPresent: (i === 0 && j === 0) ? false : true,
+          isPresent,
           piece: null,
           backgroundColor: "white"
         })
@@ -259,7 +269,7 @@ function App() {
         handleTouchEnd(e);
       }
     };
-    
+
     document.addEventListener('touchmove', handleDocumentTouchMove, { passive: false });
     document.addEventListener('touchend', handleDocumentTouchEnd, { passive: false });
 
@@ -268,20 +278,27 @@ function App() {
       document.removeEventListener('touchend', handleDocumentTouchEnd);
     };
   }, [isDragging, handleTouchMove, handleTouchEnd]);
-
   useEffect(() => {
     if (grid.length > 0) {
-      if (CheckSolution(grid, game.size[0], game.size[1])) {
+      let data = CheckSolution(grid, game.size[0], game.size[1])
+      if (data[0]) {
         setLoss(false)
         if (game.pieces.length === 0) {
           setWin(true)
         }
       } else {
+        const [i, j] = data[1]
+        if (grid[i][j].backgroundColor !== "brown") {
+          let tempGrid = JSON.parse(JSON.stringify(grid))
+          tempGrid[i][j].backgroundColor = "brown"
+          setGrid(tempGrid)
+        }
         setLoss(true)
         setWin(false)
       }
     }
-  }, [grid, game.pieces])
+  }, [grid])
+
 
   useEffect(() => {
     let rows = game.size[0]
@@ -321,9 +338,9 @@ function App() {
   return (
     <>
       <main>
-        {win && <div>Win</div>}
-        {loss && <div>Loss</div>}
-        <div className='grid-container' style={{ gridTemplateRows: `repeat(${game.size[0]}, 50px)`, gridTemplateColumns: `repeat(${game.size[1]}, 50px)`, width: `${game.size[1] * 50 + game.size[1]}px` }}>
+        {win && <div style={{ color: "green", fontSize: "1.5rem", fontWeight: "700" }}>Solved</div>}
+        {loss && <div style={{ color: "red", fontSize: "1.5rem", fontWeight: "700" }}>Exposed</div>}
+        <div className='grid-container' style={{ gridTemplateRows: `repeat(${game.size[0]}, 100px)`, gridTemplateColumns: `repeat(${game.size[1]}, 100px)`, width: `${game.size[1] * 100 + game.size[1]}px` }}>
           {grid.map((row, inx) => {
             return (row.map((item, ind) => {
               return (
@@ -372,7 +389,7 @@ function App() {
             )
           })}
         </div>
-       
+
         {ghostImage && (
           <div
             style={{
@@ -387,8 +404,8 @@ function App() {
               transform: 'scale(1.1)'
             }}
           >
-            <img 
-              src={`/${ghostImage.piece}.png`} 
+            <img
+              src={`/${ghostImage.piece}.png`}
               alt={`${ghostImage.piece}-ghost`}
               style={{
                 width: '100%',
