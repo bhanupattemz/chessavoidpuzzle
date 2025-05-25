@@ -1,0 +1,185 @@
+.generate-puzzle-main {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+
+.form-container {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  padding: 20px;
+}
+
+.generate-pieces-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  width: 100%;
+  padding: 20px;
+  background-color: #2c3e50;
+  border-radius: 15px;
+}
+
+.generate-pieces-container>div {
+  background-color: white;
+  padding: 15px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.3s ease;
+}
+
+.generate-pieces-container>div:hover {
+  transform: translateY(-5px);
+}
+
+.generate-pieces-container img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.generate-pieces-container h2 {
+  font-size: 1rem;
+  text-transform: capitalize;
+  margin: 0;
+}
+
+.generate-pieces-container input {
+  width: 60px;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.grid-size-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.grid-size-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.grid-size-inputs input {
+  width: 60px;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.grid-container {
+  display: grid;
+  gap: 5px;
+  background: #2c3e50;
+  padding: 15px;
+  border-radius: 15px;
+  margin: 0 auto;
+}
+
+.grid-cell {
+  background-color: #34495e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 5px;
+  aspect-ratio: 1/1;
+}
+
+.grid-cell>div {
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.grid-cell:hover>div {
+  background-color: #b9ffd6;
+}
+
+.form-container>button {
+  padding: 12px 30px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.form-container>button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.form-container input::-webkit-outer-spin-button,
+.form-container input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* .form-container input {
+  -moz-appearance: textfield;
+} */
+
+@media (max-width: 768px) {
+  .generate-pieces-container {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    padding: 15px;
+    gap: 10px;
+  }
+
+  .generate-pieces-container img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .grid-container {
+    padding: 10px;
+    gap: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    padding: 10px;
+    gap: 20px;
+  }
+
+  .generate-pieces-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-size-label {
+    font-size: 1rem;
+  }
+
+  .form-container>button {
+    padding: 10px 25px;
+    font-size: 0.9rem;
+  }
+}

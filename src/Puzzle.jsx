@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import './App.css'
+import './Puzzle.css'
 import { useEffect } from 'react'
 import { CheckSolution } from "./Solution"
 import { useParams, useNavigate } from "react-router-dom"
@@ -421,7 +421,14 @@ function Puzzle() {
             <span onClick={() => setOpenSolution(false)}><MdCancel /></span>
           </div>
           <h2>Solution</h2>
-          <div className='grid-container' style={{ gridTemplateRows: `repeat(${game.size[0]}, ${screenWidth < 600 ? 50 : 100}px)`, gridTemplateColumns: `repeat(${game.size[1]}, ${screenWidth < 600 ? 50 : 100}px)`, width: `${game.size[1] * (screenWidth < 600 ? 50 : 100) + game.size[1] * (screenWidth < 600 ? 5 : 8)}px` }}>
+          <div className='grid-container' style={{
+            gridTemplateRows: `repeat(${game.size[0]}, ${screenWidth < 600 ? 50 : 100}px)`,
+            gridTemplateColumns: `repeat(${game.size[1]}, ${screenWidth < 600 ? 50 : 100}px)`,
+            gap: `${screenWidth < 600 ? 5 : 8}px`,
+
+            padding: `${screenWidth < 600 ? 10 : 15}px`,
+
+          }}>
             {solutionGrid.map((row, inx) => {
               return (row.map((item, ind) => {
                 let backgroundColor = item.colored ? "rgb(253, 219, 225)" : "white"
@@ -470,16 +477,23 @@ function Puzzle() {
           <div className='solved-btns'>
             {level >= 2 && <button onClick={() => window.location.href = `/puzzle/${level - 1}`}>Previous</button>}
             <button onClick={() => {
-              () => window.location.href = `/puzzle/${level}`
-            }}>Refresh</button>
+              window.location.href = `/puzzle/${level}`
+            }}>RePlay</button>
             {level < getnLevels() && <button onClick={() => window.location.href = `/puzzle/${level + 1}`}>Next</button>}
           </div>
         </div>}
       <main className='chess-puzzle-main'>
 
-        <div className='info-btn'><span onClick={() => setInfoOpen(true)}><FaInfoCircle /></span></div>
+        <div className='info-btn'><button onClick={() => { navigate("/generate") }}>Generate Own</button><span onClick={() => setInfoOpen(true)}><FaInfoCircle /></span></div>
 
-        <div className='grid-container' style={{ gridTemplateRows: `repeat(${game.size[0]}, ${screenWidth < 600 ? 50 : 100}px)`, gridTemplateColumns: `repeat(${game.size[1]}, ${screenWidth < 600 ? 50 : 100}px)`, width: `${game.size[1] * (screenWidth < 600 ? 50 : 100) + game.size[1] * (screenWidth < 600 ? 5 : 8)}px` }}>
+        <div className='grid-container' style={{
+          gridTemplateRows: `repeat(${game.size[0]}, ${screenWidth < 600 ? 50 : 100}px)`,
+          gridTemplateColumns: `repeat(${game.size[1]}, ${screenWidth < 600 ? 50 : 100}px)`,
+          gap: `${screenWidth < 600 ? 5 : 8}px`,
+
+          padding: `${screenWidth < 600 ? 10 : 15}px`,
+
+        }}>
           {grid.map((row, inx) => {
             return (row.map((item, ind) => {
               let backgroundColor = item.colored ? "rgb(253, 219, 225)" : "white"
@@ -536,7 +550,7 @@ function Puzzle() {
         <div className='btn-container'>
           {level >= 2 && <button onClick={() => window.location.href = `/puzzle/${level - 1}`}>Previous</button>}
           <button onClick={() => {
-            () => window.location.href = `/puzzle/${level}`
+            window.location.href = `/puzzle/${level}`
           }}>Refresh</button>
           <button onClick={() => setOpenSolution(true)}>Solution</button>
           {level < getnLevels() && <button onClick={() => window.location.href = `/puzzle/${level + 1}`}>Next</button>}

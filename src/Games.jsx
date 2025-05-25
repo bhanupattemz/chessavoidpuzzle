@@ -22,6 +22,19 @@ const games = [
             { piece: "knights", n: [2, 1] },
             { piece: "rooks", n: [1, 0] }
         ]
+    },
+    {
+        size: [3, 5],
+        pieces: ["bishops", "bishops", "bishops", "king", "knights", "rooks"],
+        notHave: [[0, 0], [0, 3], [0, 4]],
+        solution: [
+            { piece: "bishops", n: [2,0] },
+            { piece: "bishops", n: [2, 1] },
+            { piece: "bishops", n: [2, 2] },
+            { piece: "knights", n: [2, 3] },
+            { piece: "rooks", n: [1, 4] },
+            { piece: "king", n: [0,1] }
+        ]
     }
 ]
 
