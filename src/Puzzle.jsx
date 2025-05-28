@@ -15,16 +15,12 @@ function Puzzle() {
   let [grid, setGrid] = useState([])
   let [solutionGrid, setSolutionGrid] = useState([])
   const navigate = useNavigate()
+  const [initialPieces, setInitialPieces] = useState([])
   let [game, setgame] = useState({
-    size: [3, 4],
-    pieces: ["bishops", "bishops", "bishops", "bishops", "queen"],
-    notHave: [[0, 0]],
+    size: [0, 0],
+    pieces: [],
+    notHave: [],
     solution: [
-      { piece: "bishops", n: [0, 2] },
-      { piece: "bishops", n: [0, 3] },
-      { piece: "bishops", n: [2, 2] },
-      { piece: "bishops", n: [2, 3] },
-      { piece: "queen", n: [1, 0] }
     ]
   })
   const params = useParams()
@@ -190,13 +186,11 @@ function Puzzle() {
 
       const pieceToAdd = game.pieces[dragIndex];
       if (!pieceToAdd) return;
-
       const newGrid = JSON.parse(JSON.stringify(grid));
       const pieceToReplace = newGrid[row][col].piece;
       newGrid[row][col].piece = pieceToAdd;
       setGrid(newGrid);
-
-      const updatedPieces = [...game.pieces];
+      const updatedPieces = JSON.parse(JSON.stringify(game.pieces));
       updatedPieces.splice(dragIndex, 1);
       if (pieceToReplace) updatedPieces.push(pieceToReplace);
       setgame(prev => ({ ...prev, pieces: updatedPieces }));
@@ -362,8 +356,12 @@ function Puzzle() {
     setGrid(tempGrid)
   }, [isDropped, curr, game.size, refreshCount])
 
+
+
   useEffect(() => {
-    setgame(getGame(level))
+    let tempgame = getGame(level)
+    setgame(tempgame)
+    setInitialPieces(tempgame.pieces)
   }, [level])
 
 
@@ -485,12 +483,13 @@ function Puzzle() {
       <main className='chess-puzzle-main'>
 
         <div className='info-btn'><button onClick={() => { navigate("/generate") }}>Generate Own</button><span onClick={() => setInfoOpen(true)}><FaInfoCircle /></span></div>
-
+        <div className='level-heading'>
+          <h2>Level {level}</h2>
+        </div>
         <div className='grid-container' style={{
           gridTemplateRows: `repeat(${game.size[0]}, ${screenWidth < 600 ? 50 : 100}px)`,
           gridTemplateColumns: `repeat(${game.size[1]}, ${screenWidth < 600 ? 50 : 100}px)`,
           gap: `${screenWidth < 600 ? 5 : 8}px`,
-
           padding: `${screenWidth < 600 ? 10 : 15}px`,
 
         }}>
@@ -559,8 +558,8 @@ function Puzzle() {
           <div
             style={{
               position: 'fixed',
-              left: ghostImage.x - 25,
-              top: ghostImage.y - 25,
+              left: ghostImage.x ,
+              top: ghostImage.y ,
               width: '50px',
               height: '50px',
               pointerEvents: 'none',

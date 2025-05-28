@@ -20,6 +20,11 @@ body {
   animation: titleGlow 2s ease-in-out infinite alternate;
 }
 
+.level-heading{
+  font-size: larger;
+  margin-bottom: 10px;
+}
+
 @keyframes titleGlow {
   from {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);

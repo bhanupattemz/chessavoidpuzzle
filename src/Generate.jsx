@@ -79,7 +79,7 @@ export default function Generate() {
                 </div>
                 <div>
                     <label htmlFor="grid-size">Grid Size :
-                        <input type="number" min={0} max={10} value={size[0]} onChange={(e) => setSize(prev => ([prev[1], parseInt(e.target.value)]))} />X
+                        <input type="number" min={0} max={10} value={size[0]} onChange={(e) => setSize(prev => ([parseInt(e.target.value), prev[1]]))} />X
                         <input type="number" min={0} max={10} value={size[1]} onChange={(e) => setSize(prev => ([prev[0], parseInt(e.target.value)]))} />
                     </label>
                 </div>
@@ -132,8 +132,11 @@ export default function Generate() {
                                 }
                             }
                         }
+                        // let games = JSON.parse(window.localStorage.getItem("game") || "[]")
+                        // games.push(tempGame)
                         window.localStorage.setItem("game", JSON.stringify(tempGame))
                         window.location.href = '/puzzle/own'
+                        console.log("success")
                     } else {
                         setNoSolution(true)
                     }
