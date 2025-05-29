@@ -6,7 +6,14 @@
   min-height: 100vh;
 }
 
+.generate-puzzle-main p{
+  text-align: center;
+}
 
+.generate-puzzle-main a{
+  color: white;
+
+}
 .form-container {
   width: 100%;
   max-width: 1200px;

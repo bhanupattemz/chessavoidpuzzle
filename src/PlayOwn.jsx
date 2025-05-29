@@ -500,57 +500,59 @@ function Puzzle() {
                 </div>}
             <main className='chess-puzzle-main'>
 
-                <div className='info-btn' style={{ justifyContent: "end" }}><span onClick={() => setInfoOpen(true)}><FaInfoCircle /></span></div>
+                <div className='info-btn' ><button onClick={() => { navigate("/puzzle/1") }}>Play Levels</button><span onClick={() => setInfoOpen(true)}><FaInfoCircle /></span></div>
 
-                <div className='grid-container' style={{
-                    gridTemplateRows: `repeat(${game.size[0]}, ${screenWidth < 600 ? 50 : 100}px)`,
-                    gridTemplateColumns: `repeat(${game.size[1]}, ${screenWidth < 600 ? 50 : 100}px)`,
-                    margin: '0 auto',
-                    justifySelf: 'center',
-                    gridArea: '1/1',
-                    display: 'grid',
-                    gap: `${screenWidth < 600 ? 5 : 10}px`,
-                    backgroundColor: '#2c3e50',
-                    padding: `${screenWidth < 600 ? 10 : 15}px`,
-                    borderRadius: '15px'
-                }}>
-                    {grid.map((row, inx) => {
-                        return (row.map((item, ind) => {
-                            let backgroundColor = item.colored ? "rgb(253, 219, 225)" : "white"
-                            if (item.backgroundColor && item.backgroundColor !== "white") {
-                                backgroundColor = item.backgroundColor
-                            }
-                            return (
-                                <div key={item.num} className='grid-cell'>
+                <div className='grid-scroll-container'>
+                    <div className='grid-container' style={{
+                        gridTemplateRows: `repeat(${game.size[0]}, ${screenWidth < 600 ? 50 : 100}px)`,
+                        gridTemplateColumns: `repeat(${game.size[1]}, ${screenWidth < 600 ? 50 : 100}px)`,
+                        margin: '0 auto',
+                        justifySelf: 'center',
+                        gridArea: '1/1',
+                        display: 'grid',
+                        gap: `${screenWidth < 600 ? 5 : 10}px`,
+                        backgroundColor: '#2c3e50',
+                        padding: `${screenWidth < 600 ? 10 : 15}px`,
+                        borderRadius: '15px'
+                    }}>
+                        {grid.map((row, inx) => {
+                            return (row.map((item, ind) => {
+                                let backgroundColor = item.colored ? "rgb(253, 219, 225)" : "white"
+                                if (item.backgroundColor && item.backgroundColor !== "white") {
+                                    backgroundColor = item.backgroundColor
+                                }
+                                return (
+                                    <div key={item.num} className='grid-cell'>
 
-                                    {item.isPresent &&
-                                        <div
-                                            onDrop={(e) => handleDrop(e, inx, ind)}
-                                            onDragOver={(e) => {
-                                                e.preventDefault();
-                                                const dragIndex = index
-                                                if (!isFromDropZone) {
-                                                    setCurr({ piece: game.pieces[dragIndex], row: inx, col: ind })
-                                                } else {
-                                                    let row1 = Math.floor(dragIndex / game.size[1]);
-                                                    let col1 = dragIndex % game.size[1];
-                                                    setCurr({ piece: grid[row1][col1].piece, row: inx, col: ind })
-                                                }
-                                            }}
-                                            onDragLeave={() => {
-                                                setCurr(null)
-                                            }}
-                                            draggable={!!item.piece}
-                                            onDragStart={(e) => item.piece && handleDragStart(e, inx * game.size[1] + ind, true)}
-                                            onTouchStart={(e) => item.piece && handleTouchStart(e, inx * game.size[1] + ind, true)}
-                                            style={{ backgroundColor: `${backgroundColor}` }}
-                                        >
-                                            {item.piece && <img className='grid-img' src={`/${item.piece}.png`} alt={`${item.piece}-img`} />}
-                                        </div>}
-                                </div>
-                            )
-                        }))
-                    })}
+                                        {item.isPresent &&
+                                            <div
+                                                onDrop={(e) => handleDrop(e, inx, ind)}
+                                                onDragOver={(e) => {
+                                                    e.preventDefault();
+                                                    const dragIndex = index
+                                                    if (!isFromDropZone) {
+                                                        setCurr({ piece: game.pieces[dragIndex], row: inx, col: ind })
+                                                    } else {
+                                                        let row1 = Math.floor(dragIndex / game.size[1]);
+                                                        let col1 = dragIndex % game.size[1];
+                                                        setCurr({ piece: grid[row1][col1].piece, row: inx, col: ind })
+                                                    }
+                                                }}
+                                                onDragLeave={() => {
+                                                    setCurr(null)
+                                                }}
+                                                draggable={!!item.piece}
+                                                onDragStart={(e) => item.piece && handleDragStart(e, inx * game.size[1] + ind, true)}
+                                                onTouchStart={(e) => item.piece && handleTouchStart(e, inx * game.size[1] + ind, true)}
+                                                style={{ backgroundColor: `${backgroundColor}` }}
+                                            >
+                                                {item.piece && <img className='grid-img' src={`/${item.piece}.png`} alt={`${item.piece}-img`} />}
+                                            </div>}
+                                    </div>
+                                )
+                            }))
+                        })}
+                    </div>
                 </div>
                 <div className='pieces-staging-area'>
                     {game && game.pieces.map((piece, inx) => {

@@ -406,6 +406,13 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
+
+.grid-scroll-container{
+  width: 100%;
+  overflow: hidden !important;
+  display: flex;
+}
+
 @media (max-width: 768px) {
   .chess-puzzle-main {
     width: 95%;
