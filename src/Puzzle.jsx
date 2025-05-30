@@ -362,6 +362,7 @@ function Puzzle() {
     let tempgame = getGame(level)
     setgame(tempgame)
     setInitialPieces(tempgame.pieces)
+    localStorage.setItem("level", level)
   }, [level])
 
 
