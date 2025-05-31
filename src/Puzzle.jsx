@@ -13,6 +13,7 @@ function Puzzle() {
   const [refreshCount, setRefreshCount] = useState(0)
   const screenWidth = window.screen.width
   let [grid, setGrid] = useState([])
+  let [coloredGrid, setColoredGrid] = useState([])
   let [solutionGrid, setSolutionGrid] = useState([])
   const navigate = useNavigate()
   const [initialPieces, setInitialPieces] = useState([])
@@ -20,8 +21,7 @@ function Puzzle() {
     size: [0, 0],
     pieces: [],
     notHave: [],
-    solution: [
-    ]
+    solution: []
   })
   const params = useParams()
   const [level, setLevel] = useState(parseInt(params.level))
@@ -35,6 +35,7 @@ function Puzzle() {
   const [touchStartPos, setTouchStartPos] = useState(null)
   const [dragElement, setDragElement] = useState(null)
   const [ghostImage, setGhostImage] = useState(null)
+
   const getElementFromTouch = useCallback((clientX, clientY) => {
     return document.elementFromPoint(clientX, clientY)
   }, [])
@@ -58,7 +59,6 @@ function Puzzle() {
   }, [])
 
   const handleTouchStart = useCallback((e, touchIndex, touchIsFromDropZone = false) => {
-    e.preventDefault()
     const touch = e.touches[0]
     setTouchStartPos({ x: touch.clientX, y: touch.clientY })
     setIndex(touchIndex)
@@ -86,7 +86,6 @@ function Puzzle() {
   const handleTouchMove = useCallback((e) => {
     if (!isDragging || !touchStartPos) return
 
-    e.preventDefault()
     const touch = e.touches[0]
 
     if (ghostImage) {
@@ -117,13 +116,11 @@ function Puzzle() {
   }, [isDragging, touchStartPos, index, isFromDropZone, game.pieces, game.size, grid, getElementFromTouch, getGridPosition, ghostImage])
 
   const handleTouchEnd = useCallback((e) => {
-    setSteps(prev => prev += 1)
+    setSteps(prev => prev + 1)
     if (!isDragging) return
     setIsDropped(true)
-    e.preventDefault()
     const touch = e.changedTouches[0]
     const element = getElementFromTouch(touch.clientX, touch.clientY)
-
     setCurr(null)
 
     if (element) {
@@ -149,6 +146,7 @@ function Puzzle() {
         } else {
           let row1 = Math.floor(dragIndex / game.size[1]);
           let col1 = dragIndex % game.size[1];
+
           const newGrid = JSON.parse(JSON.stringify(grid));
           let tempPiece = null
           if (newGrid[gridPos.row][gridPos.col].piece) {
@@ -181,7 +179,6 @@ function Puzzle() {
     setSteps(prev => prev + 1)
     const dragIndex = index
     if (!isFromDropZone) {
-      const dragIndex = index;
       if (dragIndex == null || dragIndex >= game.pieces.length) return;
 
       const pieceToAdd = game.pieces[dragIndex];
@@ -211,15 +208,17 @@ function Puzzle() {
     setIsDragging(false);
   }, [grid, game, index, isFromDropZone]);
 
-
   useEffect(() => {
     let temp = []
+    let tempColors = []
     for (let i = 0; i < game.size[0]; i += 1) {
       let row = []
+      let coloredRow = []
       for (let j = 0; j < game.size[1]; j += 1) {
+        coloredRow.push("white")
         let isPresent = true
         for (let item of game.notHave) {
-          if (item[0] == i && item[1] == j) {
+          if (item[0] === i && item[1] === j) {
             isPresent = false
           }
         }
@@ -227,13 +226,14 @@ function Puzzle() {
           num: i * game.size[1] + j,
           isPresent,
           piece: null,
-          backgroundColor: "white",
           colored: false
         })
       }
       temp.push(row)
+      tempColors.push(coloredRow)
     }
     setGrid(temp)
+    setColoredGrid(tempColors)
     let tempSolution = JSON.parse(JSON.stringify(temp))
     for (let piece of game.solution) {
       tempSolution[piece.n[0]][piece.n[1]].piece = piece.piece
@@ -263,6 +263,7 @@ function Puzzle() {
       document.removeEventListener('touchend', handleDocumentTouchEnd);
     };
   }, [isDragging, handleTouchMove, handleTouchEnd]);
+
   useEffect(() => {
     if (grid.length > 0) {
       let data = CheckSolution(grid, game.size[0], game.size[1])
@@ -272,16 +273,15 @@ function Puzzle() {
         }
       } else {
         const [i, j] = data[1]
-        if (grid[i][j].backgroundColor !== "rgb(198, 255, 180)") {
-          let tempGrid = JSON.parse(JSON.stringify(grid))
-          tempGrid[i][j].backgroundColor = "rgb(198, 255, 180)"
-          setGrid(tempGrid)
+        if (coloredGrid[i] && coloredGrid[i][j] !== "rgb(198, 255, 180)") {
+          let tempColoredGrid = JSON.parse(JSON.stringify(coloredGrid))
+          tempColoredGrid[i][j] = "rgb(198, 255, 180)"
+          setColoredGrid(tempColoredGrid)
         }
         setWin(false)
       }
     }
-  }, [grid])
-
+  }, [grid, coloredGrid])
 
   useEffect(() => {
     let rows = game.size[0]
@@ -290,9 +290,10 @@ function Puzzle() {
       return
     }
     let tempGrid = JSON.parse(JSON.stringify(grid))
+    let tempColoredGrid = JSON.parse(JSON.stringify(coloredGrid))
     for (let i = 0; i < game.size[0]; i += 1) {
       for (let j = 0; j < game.size[1]; j += 1) {
-        tempGrid[i][j].backgroundColor = "white"
+        tempColoredGrid[i][j] = "white"
       }
     }
     if (curr && curr.piece && typeof curr.row === 'number' && typeof curr.col === 'number') {
@@ -306,8 +307,8 @@ function Puzzle() {
             n1 += move[0];
             n2 += move[1];
             if (n1 < 0 || n1 >= rows || n2 < 0 || n2 >= cols) break;
-            if (tempGrid[n1] && tempGrid[n1][n2] && tempGrid[n1][n2].isPresent) {
-              tempGrid[n1][n2].backgroundColor = "rgb(198, 255, 180)";
+            if (tempColoredGrid[n1] && tempColoredGrid[n1][n2] && tempGrid[n1][n2].isPresent) {
+              tempColoredGrid[n1][n2] = "rgb(198, 255, 180)";
             }
             if (num === 1) break;
           }
@@ -351,12 +352,10 @@ function Puzzle() {
         }
       }
       setIsDropped(false);
+      setGrid(tempGrid)
     }
-
-    setGrid(tempGrid)
-  }, [isDropped, curr, game.size, refreshCount])
-
-
+    setColoredGrid(tempColoredGrid)
+  }, [isDropped, curr])
 
   useEffect(() => {
     let tempgame = getGame(level)
@@ -364,8 +363,6 @@ function Puzzle() {
     setInitialPieces(tempgame.pieces)
     localStorage.setItem("level", level)
   }, [level])
-
-
 
   return (
     <>
@@ -424,15 +421,13 @@ function Puzzle() {
             gridTemplateRows: `repeat(${game.size[0]}, ${screenWidth < 600 ? 50 : 100}px)`,
             gridTemplateColumns: `repeat(${game.size[1]}, ${screenWidth < 600 ? 50 : 100}px)`,
             gap: `${screenWidth < 600 ? 5 : 8}px`,
-
             padding: `${screenWidth < 600 ? 10 : 15}px`,
-
           }}>
             {solutionGrid.map((row, inx) => {
               return (row.map((item, ind) => {
                 let backgroundColor = item.colored ? "rgb(253, 219, 225)" : "white"
-                if (item.backgroundColor && item.backgroundColor !== "white") {
-                  backgroundColor = item.backgroundColor
+                if (coloredGrid[inx][ind] !== "white") {
+                  backgroundColor = coloredGrid[inx][ind]
                 }
                 return (
                   <div key={item.num} className='grid-cell'>
@@ -482,7 +477,6 @@ function Puzzle() {
           </div>
         </div>}
       <main className='chess-puzzle-main'>
-
         <div className='info-btn'><button onClick={() => { navigate("/generate") }}>Generate Own</button><span onClick={() => setInfoOpen(true)}><FaInfoCircle /></span></div>
         <div className='level-heading'>
           <h2>Level {level}</h2>
@@ -493,18 +487,15 @@ function Puzzle() {
             gridTemplateColumns: `repeat(${game.size[1]}, ${screenWidth < 600 ? 50 : 100}px)`,
             gap: `${screenWidth < 600 ? 5 : 8}px`,
             padding: `${screenWidth < 600 ? 10 : 15}px`,
-
           }}>
-
             {grid.map((row, inx) => {
               return (row.map((item, ind) => {
                 let backgroundColor = item.colored ? "rgb(253, 219, 225)" : "white"
-                if (item.backgroundColor && item.backgroundColor !== "white") {
-                  backgroundColor = item.backgroundColor
+                if (coloredGrid[inx][ind] !== "white") {
+                  backgroundColor = coloredGrid[inx][ind]
                 }
                 return (
                   <div key={item.num} className='grid-cell'>
-
                     {item.isPresent &&
                       <div
                         onDrop={(e) => handleDrop(e, inx, ind)}

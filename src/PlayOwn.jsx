@@ -10,15 +10,13 @@ import { pieces } from "./Games"
 function Puzzle() {
     const [infoOpen, setInfoOpen] = useState(false)
     const [openSolution, setOpenSolution] = useState(false)
-    const [refreshCount, setRefreshCount] = useState(0)
     const screenWidth = window.screen.width
     let [grid, setGrid] = useState([])
+    let [coloredGrid, setColoredGrid] = useState([])
     let [solutionGrid, setSolutionGrid] = useState([])
     const navigate = useNavigate()
-
-    // Initialize game as null - will be loaded from localStorage
     let [game, setgame] = useState(null)
-
+    let loading = false
     const params = useParams()
     const [steps, setSteps] = useState(0)
     const [win, setWin] = useState(false)
@@ -115,7 +113,7 @@ function Puzzle() {
 
         setCurr(null)
 
-        if (element) {
+        if (element && !loading) {
             const gridPos = getGridPosition(element)
             if (gridPos && grid[gridPos.row] && grid[gridPos.row][gridPos.col] && grid[gridPos.row][gridPos.col].isPresent) {
                 const dragIndex = index
@@ -167,7 +165,10 @@ function Puzzle() {
         e.stopPropagation();
         setCurr(null)
         setIsDropped(true)
+
+        setIsDragging(false);
         setSteps(prev => prev + 1)
+        if (loading) return
         const dragIndex = index
         if (!isFromDropZone) {
             const dragIndex = index;
@@ -199,10 +200,8 @@ function Puzzle() {
             setGrid(newGrid);
         }
 
-        setIsDragging(false);
     }, [grid, game, index, isFromDropZone]);
 
-    // Load game from localStorage on component mount
     useEffect(() => {
         try {
             const storedGame = window.localStorage.getItem("game")
@@ -224,14 +223,16 @@ function Puzzle() {
         }
     }, [navigate])
 
-    // Initialize grid when game is loaded
     useEffect(() => {
-        if (!game) return // Don't initialize until game is loaded
+        if (!game) return
 
         let temp = []
+        let coloredTemp = []
         for (let i = 0; i < game.size[0]; i += 1) {
             let row = []
+            let coloredRow = []
             for (let j = 0; j < game.size[1]; j += 1) {
+                coloredRow.push("white")
                 let isPresent = true
                 if (game.notHave) {
                     for (let item of game.notHave) {
@@ -244,20 +245,21 @@ function Puzzle() {
                     num: i * game.size[1] + j,
                     isPresent,
                     piece: null,
-                    backgroundColor: "white",
                     colored: false
                 })
             }
             temp.push(row)
+            coloredTemp.push(coloredRow)
         }
         setGrid(temp)
+        setColoredGrid(temp)
 
         let tempSolution = JSON.parse(JSON.stringify(temp))
         for (let piece of game.solution) {
             tempSolution[piece.n[0]][piece.n[1]].piece = piece.piece
         }
         setSolutionGrid(tempSolution)
-    }, [game, refreshCount])
+    }, [game])
 
     useEffect(() => {
         const handleDocumentTouchMove = (e) => {
@@ -291,28 +293,29 @@ function Puzzle() {
                 }
             } else {
                 const [i, j] = data[1]
-                if (grid[i][j].backgroundColor !== "rgb(198, 255, 180)") {
-                    let tempGrid = JSON.parse(JSON.stringify(grid))
-                    tempGrid[i][j].backgroundColor = "rgb(198, 255, 180)"
-                    setGrid(tempGrid)
+                if (coloredGrid[i][j] !== "rgb(198, 255, 180)") {
+                    let tempcoloredGrid = JSON.parse(JSON.stringify(coloredGrid))
+                    tempcoloredGrid[i][j] = "rgb(198, 255, 180)"
+                    setColoredGrid(tempcoloredGrid)
                 }
                 setWin(false)
             }
         }
-    }, [grid, game])
+    }, [grid, coloredGrid])
 
     useEffect(() => {
-        if (!game) return // Don't run if game not loaded
-
+        if (!game) return
+        loading = true
         let rows = game.size[0]
         let cols = game.size[1]
         if (!grid || grid.length !== rows || (grid[0] && grid[0].length !== cols)) {
             return
         }
         let tempGrid = JSON.parse(JSON.stringify(grid))
+        let tempColoredGrid = JSON.parse(JSON.stringify(coloredGrid))
         for (let i = 0; i < game.size[0]; i += 1) {
             for (let j = 0; j < game.size[1]; j += 1) {
-                tempGrid[i][j].backgroundColor = "white"
+                tempColoredGrid[i][j] = "white"
             }
         }
         if (curr && curr.piece && typeof curr.row === 'number' && typeof curr.col === 'number') {
@@ -326,8 +329,8 @@ function Puzzle() {
                         n1 += move[0];
                         n2 += move[1];
                         if (n1 < 0 || n1 >= rows || n2 < 0 || n2 >= cols) break;
-                        if (tempGrid[n1] && tempGrid[n1][n2] && tempGrid[n1][n2].isPresent) {
-                            tempGrid[n1][n2].backgroundColor = "rgb(198, 255, 180)";
+                        if (tempColoredGrid && tempColoredGrid[n2] && tempGrid[n1][n2].isPresent) {
+                            tempColoredGrid[n1][n2] = "rgb(198, 255, 180)";
                         }
                         if (num === 1) break;
                     }
@@ -371,12 +374,14 @@ function Puzzle() {
                 }
             }
             setIsDropped(false);
+
+            setGrid(tempGrid)
         }
 
-        setGrid(tempGrid)
-    }, [isDropped, curr, game, refreshCount])
+        setColoredGrid(tempColoredGrid)
+        loading = false
+    }, [isDropped, curr])
 
-    // Don't render anything until game is loaded
     if (!game) {
         return <div>Loading...</div>
     }
@@ -449,8 +454,8 @@ function Puzzle() {
                         {solutionGrid.map((row, inx) => {
                             return (row.map((item, ind) => {
                                 let backgroundColor = item.colored ? "rgb(253, 219, 225)" : "white"
-                                if (item.backgroundColor && item.backgroundColor !== "white") {
-                                    backgroundColor = item.backgroundColor
+                                if (coloredGrid[inx][ind] !== "white") {
+                                    backgroundColor = coloredGrid[inx][ind]
                                 }
                                 return (
                                     <div key={item.num} className='grid-cell'>
@@ -518,8 +523,8 @@ function Puzzle() {
                         {grid.map((row, inx) => {
                             return (row.map((item, ind) => {
                                 let backgroundColor = item.colored ? "rgb(253, 219, 225)" : "white"
-                                if (item.backgroundColor && item.backgroundColor !== "white") {
-                                    backgroundColor = item.backgroundColor
+                                if (coloredGrid[inx][ind] && coloredGrid[inx][ind] !== "white") {
+                                    backgroundColor = coloredGrid[inx][ind]
                                 }
                                 return (
                                     <div key={item.num} className='grid-cell'>

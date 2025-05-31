@@ -11,6 +11,7 @@ export default function Generate() {
         bishops: 0,
         knights: 0
     })
+    const currentGame = localStorage.getItem("game")
     const [noSolution, setNoSolution] = useState(false)
     const screenWidth = window.screen.width
     const [size, setSize] = useState([3, 3])
@@ -49,9 +50,9 @@ export default function Generate() {
                 </div>
                 <h2>No Solution</h2>
             </div>}
-            <div>
+            {currentGame && <div>
                 <a href="/puzzle/own">Play previous generated puzzle</a>
-            </div>
+            </div>}
             <form style={{
                 minWidth: "70%"
             }}
